@@ -18,14 +18,17 @@ ALevelGeneratorActor::ALevelGeneratorActor()
 
     HouseActorCount = 3;
     RandomSeed = 42;
+    EnableGeneration = false;
 }
 
 void ALevelGeneratorActor::OnConstruction(const FTransform& Transform)
 {
-    RandomStream.Initialize(RandomSeed);
-    CollectWorldParameters();
-    DeleteOldActors();
-    SpawnNewActors();
+    if (EnableGeneration) {
+        RandomStream.Initialize(RandomSeed);
+        CollectWorldParameters();
+        DeleteOldActors();
+        SpawnNewActors();
+    }
 }
 
 void ALevelGeneratorActor::CollectWorldParameters()
@@ -59,6 +62,10 @@ void ALevelGeneratorActor::CollectWorldParameters()
             UE_LOG(LogTemp, Warning, TEXT("Grid rows: %d, Grid columns: %d"), GridRows, GridColumns);
         }
     }
+    GridOccupied.SetNum(GridRows);
+    for (int i = 0; i < GridRows; ++i) {
+        GridOccupied[i].SetNumZeroed(GridColumns);
+    }
 }
 
 void ALevelGeneratorActor::DeleteOldActors()
@@ -81,8 +88,14 @@ void ALevelGeneratorActor::SpawnNewActors()
 FVector ALevelGeneratorActor::GenerateRandomLocation()
 {
     // The random spawn location will fall between the min and max X, Y, and Z
-    int RandomRow = RandomStream.RandRange(0, GridRows - 1);
-    int RandomColumn = RandomStream.RandRange(0, GridColumns - 1);
+    int RandomRow;
+    int RandomColumn;
+    do {
+        RandomRow = RandomStream.RandRange(0, GridRows - 1);
+        RandomColumn = RandomStream.RandRange(0, GridColumns - 1);
+    } while (GridOccupied[RandomRow][RandomColumn]);
+
+    GridOccupied[RandomRow][RandomColumn] = true;
 
     FVector RandomLocation;
     RandomLocation.X = GridOrigin.X + RandomRow * CellHeight;

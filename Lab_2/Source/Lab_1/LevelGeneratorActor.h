@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "LevelGeneratorActor.generated.h"
 
+
 class HouseActor;
 
 UCLASS()
@@ -37,6 +38,9 @@ public:
     UPROPERTY(EditAnywhere, Category = Spawning)
     int RandomSeed;
 
+    UPROPERTY(EditAnywhere, Category = Spawning)
+    bool EnableGeneration;
+
 private:
     void DeleteOldActors();
     void SpawnNewActors();
@@ -55,6 +59,8 @@ private:
     FVector FloorBoxExtent;
 
     FVector HouseActorBoxExtent;
+
+    TArray<TArray<bool>> GridOccupied;
 
     FVector GridOrigin;
     float CellHeight;

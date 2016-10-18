@@ -24,12 +24,24 @@ void APizzaHUD::DrawHUD()
     Super::DrawHUD();
 
     auto* MyGameMode = Cast<ALab_1GameMode>(UGameplayStatics::GetGameMode(this));
-    FString PendingPizzaOrderCountString = FString::Printf(TEXT("Pending pizza order count %d"), MyGameMode->GetPendingPizzaOrderCount());
-    FString DeliveledPizzaOrderCountString = FString::Printf(TEXT("Delivered pizza order count %d"), MyGameMode->GetDeliveredPizzaOrderCount());
-    FVector2D PendingSize;
-    GetTextSize(PendingPizzaOrderCountString, PendingSize.X, PendingSize.Y, HUDFont);
-    DrawText(PendingPizzaOrderCountString, FColor::White, 30, 30, HUDFont);
-    DrawText(DeliveledPizzaOrderCountString, FColor::White, 30, 30 + PendingSize.Y + 5, HUDFont);
+
+    double percentile = 0.9;
+
+    TArray<FString> Messages;
+    Messages.Add(FString::Printf(TEXT("Pending orders: %d"), MyGameMode->GetPendingPizzaOrderCount()));
+    Messages.Add(FString::Printf(TEXT("Delivered orders: %d"), MyGameMode->GetDeliveredPizzaOrderCount()));
+    Messages.Add(FString::Printf(TEXT("%d-percentile wait time %.3f"),
+        static_cast<int>(100 * percentile),
+        MyGameMode->GetDeliveredPizzaPercentileWaitTime(percentile)));
+
+    float yShift = 0;
+    for (int i = 0 ; i < Messages.Num(); ++i) {
+        DrawText(Messages[i], FColor::White, 30, 30 + yShift, HUDFont);
+
+        FVector2D Size;
+        GetTextSize(Messages[i], Size.X, Size.Y, HUDFont);
+        yShift += 5 + Size.Y;
+    }
 
     // If the game is over.
     if (MyGameMode->GetCurrentState() == ELab_1PlayState::EGameOver)

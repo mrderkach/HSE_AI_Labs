@@ -45,18 +45,21 @@ void ABaseAIController::SetNewMoveDestination(const FVector DestLocation)
 		// We need to issue move command only if far enough in order for walk animation to play correctly
 		if (NavSys && (Distance > 120.0f))
 		{
-			NavSys->SimpleMoveToLocation(this, DestLocation);
+			MoveToLocation(DestLocation, 0, 0, 1);
 		}
 	}
+}
+
+float ABaseAIController::GetDistanceBetween(const FVector SrcLocation, const FVector DestLocation)
+{
+    return FVector::Dist(SrcLocation, DestLocation);
 }
 
 float ABaseAIController::GetDistanceToDestination(const FVector DestLocation)
 {
 	APawn* const Pawn = GetPawn();
-	if (Pawn)
-	{
-		UNavigationSystem* const NavSys = GetWorld()->GetNavigationSystem();
-		return FVector::Dist(DestLocation, Pawn->GetActorLocation());
+	if (Pawn) {
+        return GetDistanceBetween(Pawn->GetActorLocation(), DestLocation);
 	}
     return 0.0f;
 }

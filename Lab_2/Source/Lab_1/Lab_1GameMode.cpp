@@ -7,18 +7,11 @@
 #include "PizzaHUD.h"
 #include "HouseActor.h"
 
+#include <vector>
+#include <algorithm>
+
 ALab_1GameMode::ALab_1GameMode()
 {
-	// use our custom PlayerController class
-	PlayerControllerClass = ALab_1PlayerController::StaticClass();
-
-	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/GameContent/TopDownCPP/Blueprints/TopDownCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
-	{
-		DefaultPawnClass = PlayerPawnBPClass.Class;
-	}
-
     // Set the default HUD class to be used in game.
     HUDClass = APizzaHUD::StaticClass();
 
@@ -27,6 +20,7 @@ ALab_1GameMode::ALab_1GameMode()
 
     TotalPizzaOrderCount = 0;
     DeliveredPizzaOrderCount = 0;
+    DeliveredPizzaWaitTime = 0.0f;
 }
 
 void ALab_1GameMode::BeginPlay()
@@ -130,6 +124,30 @@ int ALab_1GameMode::GetDeliveredPizzaOrderCount() const
     return DeliveredPizzaOrderCount;
 }
 
+float ALab_1GameMode::GetDeliveredPizzaAverageWaitTime() const
+{
+    if (DeliveredPizzaOrderCount == 0) {
+        return 0.0;
+    }
+    return DeliveredPizzaWaitTime / DeliveredPizzaOrderCount;
+}
+
+float ALab_1GameMode::GetDeliveredPizzaPercentileWaitTime(float percentile) const
+{
+    int OrderCount = DeliveredPizzaWaitTimes.Num();
+    if (OrderCount == 0) {
+        return 0.0;
+    }
+    int K = FMath::Min(OrderCount, 1000);
+    std::vector<float> times(K);
+    for (int i = OrderCount - 1; i >= OrderCount - K; --i) {
+        times[i - OrderCount + K] = DeliveredPizzaWaitTimes[i];
+    }
+    int PercentilePos = percentile * K;
+    std::nth_element(times.begin(), times.begin() + PercentilePos, times.end());
+    return times[PercentilePos];
+}
+
 void ALab_1GameMode::SpawnPizza()
 {
     if (Houses.Num() == 0) {
@@ -180,6 +198,8 @@ void ALab_1GameMode::RemoveOrder(int OrderNumber)
         }
     }
     if (Index != PizzaOrders.Num()) {
+        DeliveredPizzaWaitTime += PizzaOrders[Index]->CurrentWaitTime;
+        DeliveredPizzaWaitTimes.Add(PizzaOrders[Index]->CurrentWaitTime);
         PizzaOrders.RemoveAtSwap(Index);
     } else {
         UE_LOG(LogTemp, Warning, TEXT("Failed to remove non-exising order %d"), OrderNumber);
