@@ -2,6 +2,8 @@
 
 Нейронная сеть для игры Space Invader.
 
+Ролик на [Youtube](https://youtu.be/4hwddsNcbf4) с примером работы обученной сети.
+
 **Для запуска:**
 
 1. Установить UnrealEnginePython
